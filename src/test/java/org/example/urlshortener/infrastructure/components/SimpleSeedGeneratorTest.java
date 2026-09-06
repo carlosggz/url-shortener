@@ -10,6 +10,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.integration.support.locks.DistributedLock;
+import org.springframework.integration.support.locks.LockRegistry;
 
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
@@ -27,7 +29,10 @@ class SimpleSeedGeneratorTest {
     private SequencesRepository sequencesRepository;
 
     @Mock
-    private Lock sequenceLock;
+    private LockRegistry<Lock> lockRegistry;
+
+    @Mock
+    private DistributedLock lock;
 
     @Captor
     private ArgumentCaptor<SequenceEntity> sequenceEntityCaptor;
@@ -36,7 +41,8 @@ class SimpleSeedGeneratorTest {
 
     @BeforeEach
     void setGenerator() {
-        simpleSeedGenerator = new SimpleSeedGenerator(sequencesRepository, sequenceLock, ZONE);
+        simpleSeedGenerator = new SimpleSeedGenerator(sequencesRepository, lockRegistry, ZONE);
+        when(lockRegistry.obtain(ZONE)).thenReturn(lock);
     }
 
     @Test
@@ -69,8 +75,9 @@ class SimpleSeedGeneratorTest {
     }
 
     private void verifySequence(long sequence, String seed) {
-        verify(sequenceLock).lock();
-        verify(sequenceLock).unlock();
+        verify(lockRegistry).obtain(ZONE);
+        verify(lock).lock();
+        verify(lock).unlock();
 
         verify(sequencesRepository).save(sequenceEntityCaptor.capture());
         val savedSequence = sequenceEntityCaptor.getValue();

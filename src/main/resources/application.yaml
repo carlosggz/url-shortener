@@ -4,7 +4,7 @@ spring:
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:testdb
-    userName: test
+    username: test
     password: test
   jpa:
     hibernate.ddl-auto: create-drop
@@ -18,7 +18,7 @@ spring:
 
 app:
   base-url: http://localhost:8080
-  zone: 002
+  zone: "002"
   encoder:
     base: 62
     character-set: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"

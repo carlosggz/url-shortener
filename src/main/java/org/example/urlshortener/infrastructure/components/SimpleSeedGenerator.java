@@ -6,6 +6,7 @@ import org.example.urlshortener.domain.SeedGenerator;
 import org.example.urlshortener.infrastructure.persistence.entities.SequenceEntity;
 import org.example.urlshortener.infrastructure.persistence.repositories.SequencesRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.integration.support.locks.LockRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -18,22 +19,23 @@ public class SimpleSeedGenerator implements SeedGenerator {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final SequencesRepository sequencesRepository;
-    private final Lock sequenceLock;
+    private final LockRegistry<Lock> lockRegistry;
     private final String zone;
 
     public SimpleSeedGenerator(
             SequencesRepository sequencesRepository,
-            Lock sequenceLock,
+            LockRegistry<Lock> lockRegistry,
             @Value("${app.zone}") String zone) {
-        Assert.isTrue(StringUtils.isNumeric(zone), "Zone must a numerical string with 3 digits");
+        Assert.isTrue(StringUtils.length(zone) == 3 && StringUtils.isNumeric(zone),"Zone must a numerical string with 3 digits");
         this.sequencesRepository = sequencesRepository;
-        this.sequenceLock = sequenceLock;
+        this.lockRegistry = lockRegistry;
         this.zone = zone;
     }
 
     @Override
     public String generateSeed() {
-        sequenceLock.lock();
+        val lock = lockRegistry.obtain(zone);
+        lock.lock();
 
         try {
             val sequence = sequencesRepository
@@ -50,7 +52,7 @@ public class SimpleSeedGenerator implements SeedGenerator {
                     this.zone +
                     sequence.getSequenceValue();
         } finally {
-            sequenceLock.unlock();
+            lock.unlock();
         }
     }
 }
