@@ -18,8 +18,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @AllArgsConstructor
 public class SequenceEntity {
     @Id
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    @Column(name = "zone", nullable = false, length = 3)
+    private String zone;
 
     @Column(name = "sequence_value", nullable = false)
     private long sequenceValue;
